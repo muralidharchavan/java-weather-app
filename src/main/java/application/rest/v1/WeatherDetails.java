@@ -26,7 +26,7 @@ public class WeatherDetails {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Response weather(@QueryParam("lat") double lat, @QueryParam("lon") double lon) {
+    public Response weather(@QueryParam("getCity") String city, @QueryParam("lat") double lat, @QueryParam("lon") double lon) {
     	
     	JSONParser parse = new JSONParser();
     	JSONObject jobj;
@@ -37,7 +37,14 @@ public class WeatherDetails {
 		String inline = "";
 		
 		try {
-			URL url = new URL("http://api.openweathermap.org/data/2.5/weather?lat="+lat+"&lon="+lon+"&appid="+apikey);
+			URL url = null;
+			if( city != null ) {
+				url = new URL("http://api.openweathermap.org/data/2.5/weather?q="+city+"&appid="+apikey);
+			}
+			else {
+				url = new URL("http://api.openweathermap.org/data/2.5/weather?lat="+lat+"&lon="+lon+"&appid="+apikey);
+			}
+					
 			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 			conn.setRequestMethod("GET");
 			

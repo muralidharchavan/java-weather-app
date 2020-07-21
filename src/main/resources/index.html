@@ -19,59 +19,104 @@
 						$('#btnSubmit')
 								.click(
 										function() {
-
+											
 											var city = $('#city');
-											city.html('');
+									        city.html('');
 
-											var latitude = $('#lat').val();
-											var longitude = $('#lon').val();
+									        var sunrise;
+									        var sunset;
 
-											$
-													.ajax({
-														url : 'http://127.0.0.1:32769/getWeather',
-														method : 'get',
-														data : {
-															lat : latitude,
-															lon : longitude
-														},
-														dataType : 'json',
-														success : function(
-																response) {
-															if (response.message != null) {
-																resultElement
-																		.html(response.message);
-															} else {
+									        var getCity = $('#getCity').val();
+									        var lat = $('#lat').val();
+									        var lon = $('#lon').val();
 
-																celcius = response.main.temp - 273.15;
-																celciusmin = response.main.temp_min - 273.15;
-																celciusmax = response.main.temp_max - 273.15;
+									        var Data;
+									        if (!$.trim(getCity)) {
+									            Data = {
+									                lat: lat,
+									                lon: lon
+									            }
+									        }
+									        if (!$.trim(lat)) {
+									            Data = {
+									                getCity: getCity
+									            }
+									        }
+									        if (!$.trim(lon)) {
+									            Data = {
+									                getCity: getCity
+									            }
+									        }
+									        if ($.trim(getCity) && $.trim(lat) || $.trim(getCity) && $.trim(lon) || $.trim(getCity) && $.trim(lat) && $.trim(lon)) {
+									            alert("Enter Either City Name or Latitude and Longitude not both!");
+									            $('#getCity').val("");
+									            $('#lat').val("");
+									            $('#lon').val("");
+									        }
 
-																resultElement
-																		.html('<div class=\"panel panel-default\">'
-																				+ '<div class=\"panel-heading\" align=\"center\">Weather in '
-																				+ response.name
-																				+ '</div>'
-																				+ '<div class=\"panel-body\" align=\"center\"> Temperature : <b>'
-																				+ parseInt(celcius)
-																				+ ' °C </b> </div>'
-																				+ '<div class=\"panel-body\" align=\"center\"> Minimum Temp is <b>'
-																				+ parseInt(celciusmin)
-																				+ ' °C </b> and Maximum Temp is <b>'
-																				+ parseInt(celciusmax)
-																				+ ' °C </b> </div>'
-																				+ '<div class=\"panel-body\" align=\"center\"> Sky : <b>'
-																				+ response.weather[0].main
-																				+ ' </b> </div>'
-																				+ '<div class=\"panel-body\" align=\"center\"> Description : <b>'
-																				+ response.weather[0].description
-																				+ ' </b> </div>'
-																				+ '</div>');
-															}
-														},
-														error : function(err) {
-															alert(err);
-														}
-													});
+									        $
+									            .ajax({
+									                url: '/getWeather',
+									                method: 'get',
+									                data: Data,
+									                dataType: 'json',
+									                success: function(
+									                    response) {
+									                    if (response.message != null) {
+									                        resultElement
+									                            .html(response.message);
+									                    } else {
+
+									                        celcius = response.main.temp - 273.15;
+									                        celciusmin = response.main.temp_min - 273.15;
+									                        celciusmax = response.main.temp_max - 273.15;
+
+									                        sunrise = response.sys.sunrise;
+									                        sunset = response.sys.sunset;
+									                        epoch = response.timezone;
+
+									                        var date = new Date(sunrise * 1000);
+									                        var timeSunrise = date.toLocaleTimeString();
+
+									                        var date2 = new Date(sunset * 1000);
+									                        var timeSunset = date2.toLocaleTimeString();
+
+									                        var date3 = new Date(epoch * 1000);
+									                        var timeZoneString = date3.toGMTString();
+									                        var timezone = timeZoneString.substr(timeZoneString.length - 12);
+
+									                        resultElement
+									                            .html('<div class=\"panel panel-default\">' +
+									                                '<div class=\"panel-heading\" align=\"center\">Current Weather in ' +
+									                                response.name + ', ' + response.sys.country +
+									                                '</div>' +
+									                                '<div class=\"panel-body\" align=\"center\">' +
+									                                '<img src=\"http://openweathermap.org/img/wn/' +
+									                                response.weather[0].icon + '@2x.png\">' + '<h4>' + parseInt(celcius) + ' °C</h4>' +
+									                                '<table class="table"> \
+									                                                <tbody>' +
+									                                '<tr> <td> Minimum : </td> <td>' + parseInt(celciusmin) + ' °C</td>' +
+									                                '<td> Maximum : </td> <td>' + parseInt(celciusmax) + ' °C</td>' +
+									                                '</tr> <tr> <td> Pressure : </td> <td>' + response.main.pressure + ' hpa </td>' +
+									                                '<td> Humidity : </td> <td>' + response.main.humidity + ' % </td> </tr>' +
+									                                '<tr> <td> Sunrise : </td> <td>' + timeSunrise + ' hrs</td>' +
+									                                '<td> Sunset : </td> <td>' + timeSunset + ' hrs</td>' +
+									                                '<tr> <td> Weather Description : </td> <td>' + response.weather[0].description + '</td>' +
+									                                '<td></td> <td></td> </tr>' +
+									                                '<tr> <td> Time Zone : </td> <td>' + timezone + '</td> <td></td> <td></td></tr>' +
+									                                '</tbody> </table> </div>'
+									                            );
+
+									                        $('#getCity').val(response.name);
+									                        $('#lat').val(response.coord.lat);
+									                        $('#lon').val(response.coord.lon);
+									                    }
+									                },
+									                error: function(err) {
+									                    alert(err.message);
+									                }
+									            });
+									        
 										});
 					});
 </script>
@@ -93,22 +138,40 @@
 		<div class="col-sm-4"></div>
 		<div class="col-sm-4">
 			<div class="panel panel-default">
-				<div class="panel-heading" align="center">Enter Latitude and
-					Longitude</div>
-				<div class="panel-body">
+				<div class="panel-heading" align="center">City Name / Latitude and Longitude
+                </div>
+                <div class="panel-body">
 
-					<div class="form-group">
-						<input type="text" class="form-control" placeholder="Latitude"
-							name="lat" id="lat" />
-						<div>&nbsp;</div>
-						<input type="text" class="form-control" placeholder="Longitude"
-							name="lon" id="lon" />
-						<div>&nbsp;</div>
-						<button class="btn btn-primary btn-block" type= "submit"
-							id="btnSubmit" align="center">Submit</button>
-					</div>
+                    <div class="form-group">
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <input type="text" class="form-control" placeholder="Enter City Name" name="getCity" id="getCity" />
+                            </div>
+                        </div>
 
-				</div>
+                        <div align="center" class="center"><b>OR</b></div>
+
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <input type="text" class="form-control" placeholder="Enter Latitude" name="lat" id="lat" />
+                            </div>
+                            <div class="col-sm-6">
+                                <input type="text" class="form-control" placeholder="Enter Longitude" name="lon" id="lon" />
+                            </div>
+                        </div>
+                        <div>&nbsp;</div>
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <button class="btn btn-success btn-block" type="submit" id="btnSubmit" align="center">Submit</button>
+                            </div>
+                            <div class="col-sm-12">
+
+                                <button class="btn btn-basic btn-block" id="btnGetLocation" align="center"> <i class="fa fa-location-arrow"></i> Detect Location</button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
 			</div>
 		</div>
 		<div class="col-sm-4"></div>
